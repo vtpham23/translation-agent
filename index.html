@@ -160,7 +160,7 @@
     <div style="font-size: 24px; margin-bottom: 6px;">📄</div>
     <div style="font-size: 14px; color: var(--muted);">Drop file for batch translation</div>
   </div>
-  <input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.html">
+  <input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.html,js">
 
   <div id="pill" style="display:none" class="file-pill">
     <span id="pillName"></span>
@@ -367,6 +367,7 @@ fi.onchange = e => {
   const f = e.target.files[0];
   if (f) {
     const r = new FileReader();
+    window.currentFileExtension = f.name.split('.').pop();
     r.onload = ev => {
       document.getElementById('inputText').value = ev.target.result;
       document.getElementById('pillName').textContent = f.name;
