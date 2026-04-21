@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Translation Agent (Multi-AI)</title>
+<title>Translation Agent (Multi-AI) v2.1</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -92,7 +92,7 @@
   }
   .upload-zone:hover { border-color: var(--accent-dim); background: var(--surface2); }
   
-  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
   .group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
   select, textarea {
     width: 100%; padding: 9px 10px; font-size: 13px;
@@ -129,7 +129,7 @@
 <div class="container">
 
   <div class="header">
-    <h1>Translation Agent 2.0</h1>
+    <h1>Translation Agent 2.1</h1>
     <p>Claude & Gemini — professional multi-engine translation</p>
   </div>
 
@@ -169,10 +169,20 @@
 
   <div class="controls">
     <div class="group">
+      <label>Source Language</label>
+      <select id="src">
+        <option value="auto">Auto-detect</option>
+        <option value="Vietnamese">Vietnamese</option>
+        <option value="English">English</option>
+        <option value="Chinese">Chinese</option>
+        <option value="Japanese">Japanese</option>
+      </select>
+    </div>
+    <div class="group">
       <label>Target Language</label>
       <select id="tgt">
         <option value="Vietnamese">Vietnamese</option>
-        <option value="English">English</option>
+        <option value="English" selected>English</option>
         <option value="Chinese">Chinese</option>
         <option value="Japanese">Japanese</option>
       </select>
@@ -185,8 +195,8 @@
           <option value="claude-haiku-4-5-20251001">Claude 4.5 Haiku</option>
         </optgroup>
         <optgroup label="Google Gemini">
-          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+          <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
         </optgroup>
       </select>
     </div>
@@ -222,7 +232,7 @@
 <script>
 const CHUNK_SIZE = 12000;
 const MAX_TEST_SIZE = 200000; // 200KB limit
-const MAX_TOKENS = 4096; // Reduced to half per requirement
+const MAX_TOKENS = 4096; // Giảm một nửa theo yêu cầu trước đó
 
 // Char counter for Sandbox
 document.getElementById('testInput').addEventListener('input', (e) => {
@@ -254,7 +264,6 @@ async function callAI(model, system, text) {
     if (data.error) throw new Error(data.error.message);
     return data.candidates[0].content.parts[0].text;
   } else {
-    // Claude Logic
     const key = document.getElementById('claudeKey').value.trim();
     if (!key) throw new Error("Missing Claude API Key");
     
@@ -293,16 +302,25 @@ async function runTranslation() {
   const text = document.getElementById('inputText').value.trim();
   if (!text) return log('No text provided', 'er');
 
+  const src = document.getElementById('src').value;
   const tgt = document.getElementById('tgt').value;
   const model = document.getElementById('modelSelect').value;
-  const system = `You are a professional translator. Translate everything to ${tgt}. Output ONLY translated text.`;
+
+  /* ============================================================
+     PHẦN GỬI PROMPT ĐỂ THỰC HIỆN YÊU CẦU DỊCH THUẬT:
+     Dòng lệnh 'system' dưới đây định nghĩa vai trò và nhiệm vụ cho AI. 
+     Nó kết hợp ngôn ngữ nguồn (src) và ngôn ngữ đích (tgt).
+     ============================================================
+  */
+  const srcNote = src === 'auto' ? 'detect the source language' : `translate from ${src}`;
+  const system = `You are a professional translator. Please ${srcNote} to ${tgt}. Output ONLY the translated text that is written in ${srcNote} . Please do not translate anything that is not written in ${srcNote}. Please do not add any preamble or explanation. Absolutely make sure to Maintain the original formatting.`;
 
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
   setDot('busy', 'translating...');
   
   try {
-    log(`Starting translation with ${model}...`);
+    log(`Starting translation (${src} -> ${tgt}) with ${model}...`);
     const out = await callAI(model, system, text);
     
     document.getElementById('resultText').textContent = out;
