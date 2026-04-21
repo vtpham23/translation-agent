@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Translation Agent</title>
+<title>Translation Agent (Multi-AI)</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -19,6 +19,7 @@
     --green: #4a9e6e;
     --red: #c05a4a;
     --blue: #5a8ab5;
+    --purple: #8a7db5;
     --radius: 10px;
     --font: 'DM Sans', sans-serif;
     --mono: 'DM Mono', monospace;
@@ -49,10 +50,10 @@
     border: 0.5px solid var(--border2);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.75rem;
   }
   .api-row { display: flex; gap: 8px; align-items: center; }
-  .api-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .api-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
   .api-input {
     flex: 1; background: var(--surface2); border: 0.5px solid var(--border);
     border-radius: 7px; padding: 8px 12px; font-size: 13px;
@@ -60,14 +61,26 @@
     transition: border-color 0.15s;
   }
   .api-input:focus { border-color: var(--accent-dim); }
-  .api-hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
-  .api-hint a { color: var(--accent-dim); text-decoration: none; }
-  .api-hint a:hover { text-decoration: underline; }
   .api-status { font-size: 11px; font-family: var(--mono); }
   .api-status.ok { color: var(--green); }
   .api-status.err { color: var(--red); }
 
-  /* UPLOAD */
+  /* SANDBOX SECTION */
+  .sandbox-section {
+    background: #141414;
+    border: 0.5px solid var(--purple);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .sandbox-title { font-size: 12px; color: var(--purple); font-family: var(--mono); margin-bottom: 8px; display: block; }
+  .sandbox-input {
+    width: 100%; padding: 8px; font-size: 13px; background: #000; border: 0.5px solid #333;
+    border-radius: 6px; color: var(--text); font-family: var(--font); margin-bottom: 8px;
+    resize: none; min-height: 60px;
+  }
+
+  /* UPLOAD & CONTROLS */
   .upload-zone {
     border: 0.5px dashed var(--border2);
     border-radius: var(--radius);
@@ -76,402 +89,239 @@
     cursor: pointer;
     background: var(--surface);
     margin-bottom: 1rem;
-    transition: border-color 0.15s, background 0.15s;
   }
   .upload-zone:hover { border-color: var(--accent-dim); background: var(--surface2); }
-  .upload-zone.drag-over { border-color: var(--accent); background: #1e1c16; }
-  .upload-icon { font-size: 24px; margin-bottom: 6px; }
-  .upload-txt { font-size: 14px; color: var(--muted); }
-  .upload-sub { font-size: 12px; color: #555; margin-top: 3px; }
-
-  .file-pill {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: #1a2016; border: 0.5px solid #3a4a2a;
-    color: var(--green); padding: 5px 10px;
-    border-radius: 7px; font-size: 13px; margin-bottom: 1rem;
-  }
-  .file-pill button {
-    background: none; border: none; cursor: pointer;
-    color: var(--green); opacity: 0.5; font-size: 14px; line-height: 1;
-  }
-  .file-pill button:hover { opacity: 1; }
-
-  /* CONTROLS */
+  
   .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
   .group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
-  select {
+  select, textarea {
     width: 100%; padding: 9px 10px; font-size: 13px;
     background: var(--surface); border: 0.5px solid var(--border);
-    border-radius: 7px; color: var(--text); font-family: var(--font);
-    outline: none; cursor: pointer; transition: border-color 0.15s;
+    border-radius: 7px; color: var(--text); outline: none;
   }
-  select:hover, select:focus { border-color: var(--border2); }
-
-  textarea {
-    width: 100%; padding: 10px 12px; font-size: 13px; line-height: 1.75;
-    background: var(--surface); border: 0.5px solid var(--border);
-    border-radius: var(--radius); color: var(--text); font-family: var(--font);
-    resize: vertical; min-height: 130px; outline: none;
-    transition: border-color 0.15s;
-  }
-  textarea:focus { border-color: var(--border2); }
-  textarea::placeholder { color: #444; }
 
   .run-btn {
     width: 100%; padding: 11px; margin-top: 1rem;
     background: var(--surface2); border: 0.5px solid var(--border2);
-    border-radius: var(--radius); font-size: 14px; font-weight: 500;
-    cursor: pointer; color: var(--accent); font-family: var(--font);
-    letter-spacing: 0.2px; transition: background 0.12s, transform 0.1s;
+    border-radius: var(--radius); font-size: 14px; color: var(--accent);
+    cursor: pointer; transition: all 0.1s;
   }
   .run-btn:hover { background: #2a2a2a; }
-  .run-btn:active { transform: scale(0.99); }
   .run-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  /* LOG */
+  /* LOG & RESULT */
   .log-box { margin-top: 1rem; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .log-head {
-    display: flex; align-items: center; gap: 7px;
-    padding: 7px 12px; background: var(--surface);
-    font-size: 12px; color: var(--muted);
-    border-bottom: 0.5px solid var(--border);
-    font-family: var(--mono);
-  }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: #444; flex-shrink: 0; }
+  .log-head { padding: 7px 12px; background: var(--surface); font-size: 12px; color: var(--muted); border-bottom: 0.5px solid var(--border); font-family: var(--mono); display: flex; align-items: center; gap: 8px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #444; }
   .dot.busy { background: #c8a04a; animation: pulse 0.9s infinite; }
   .dot.ok { background: var(--green); }
-  .dot.err { background: var(--red); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
-  .log-body { padding: 8px 12px; max-height: 120px; overflow-y: auto; background: #111; }
-  .log-line { font-size: 12px; font-family: var(--mono); color: #555; line-height: 1.7; }
-  .log-line.ok { color: var(--green); }
-  .log-line.er { color: var(--red); }
-  .log-line.inf { color: #7a8a9a; }
-
-  /* RESULT */
-  .result-box {
-    margin-top: 1.25rem;
-    background: var(--surface);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius); padding: 1rem 1.25rem;
-  }
-  .result-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .result-lbl { font-size: 12px; color: var(--muted); font-family: var(--mono); }
-  .copy-btn {
-    font-size: 12px; color: var(--accent-dim); background: none;
-    border: 0.5px solid var(--border); border-radius: 5px;
-    cursor: pointer; padding: 3px 10px; font-family: var(--font);
-    transition: color 0.12s, border-color 0.12s;
-  }
-  .copy-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+  .log-body { padding: 8px 12px; max-height: 120px; overflow-y: auto; background: #111; font-family: var(--mono); font-size: 11px; color: #555; }
+  
+  .result-box { margin-top: 1.25rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1rem; }
   .result-text { font-size: 14px; line-height: 1.8; white-space: pre-wrap; color: var(--text); }
-  .result-text.loading { color: var(--muted); font-style: italic; }
-  .result-text.error { color: var(--red); font-size: 13px; }
-  .chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-  .chip {
-    font-size: 11px; padding: 3px 9px;
-    border-radius: 5px; font-family: var(--mono);
-    background: var(--surface2); color: var(--muted);
-    border: 0.5px solid var(--border);
-  }
-
-  /* DOWNLOAD */
-  .dl-btn {
-    margin-top: 10px; font-size: 12px; color: var(--blue);
-    background: none; border: 0.5px solid #2a3a4a; border-radius: 5px;
-    cursor: pointer; padding: 4px 10px; font-family: var(--font);
-    transition: color 0.12s; display: none;
-  }
-  .dl-btn:hover { color: #7ab0d5; }
-
+  
+  .file-pill { display: inline-flex; align-items: center; gap: 8px; background: #1a2016; border: 0.5px solid #3a4a2a; color: var(--green); padding: 5px 10px; border-radius: 7px; font-size: 13px; margin-bottom: 1rem; }
   input[type="file"] { display: none; }
-
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 </style>
 </head>
 <body>
 <div class="container">
 
   <div class="header">
-    <h1>Translation Agent</h1>
-    <p>Powered by Claude — upload a file or paste text to translate</p>
+    <h1>Translation Agent 2.0</h1>
+    <p>Claude & Gemini — professional multi-engine translation</p>
   </div>
 
-  <!-- API KEY -->
   <div class="api-section">
-    <div class="api-label">Anthropic API Key</div>
+    <div class="api-label">Anthropic API Key <span class="api-status" id="claudeStatus"></span></div>
     <div class="api-row">
-      <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off">
-      <span class="api-status" id="apiStatus"></span>
-    </div>
-    <div class="api-hint">
-      Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>.
-      Key is stored only in memory — never sent anywhere except Anthropic's API.
+      <input class="api-input" type="password" id="claudeKey" placeholder="sk-ant-...">
     </div>
   </div>
 
-  <!-- UPLOAD -->
+  <div class="api-section">
+    <div class="api-label">Gemini API Key <span class="api-status" id="geminiStatus"></span></div>
+    <div class="api-row">
+      <input class="api-input" type="password" id="geminiKey" placeholder="AIzaSy...">
+    </div>
+  </div>
+
+  <div class="sandbox-section">
+    <span class="sandbox-title">⚡ Sandbox: Quick Test (Max 200KB)</span>
+    <textarea class="sandbox-input" id="testInput" placeholder="Enter short text to test translation..."></textarea>
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <span id="charCount" style="font-size: 10px; color: var(--muted); align-self: center;">0 / 200,000 chars</span>
+        <button onclick="runTest()" style="font-size: 11px; padding: 4px 12px; background: var(--purple); border: none; border-radius: 4px; color: white; cursor: pointer;">Test Now</button>
+    </div>
+  </div>
+
   <div class="upload-zone" id="zone">
-    <div class="upload-icon">📄</div>
-    <div class="upload-txt">Drop a file here or click to upload</div>
-    <div class="upload-sub">.txt · .md · .csv · .json · .html — large files split automatically</div>
+    <div style="font-size: 24px; margin-bottom: 6px;">📄</div>
+    <div style="font-size: 14px; color: var(--muted);">Drop file for batch translation</div>
   </div>
-  <input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.html,.xml">
-
-  <!-- RESUME BANNER -->
-  <div id="resumeBanner" style="display:none;align-items:center;justify-content:space-between;gap:12px;background:#1a2016;border:0.5px solid #3a4a2a;border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem;">
-    <div>
-      <div style="font-size:12px;color:var(--green);font-family:var(--mono);margin-bottom:2px;">⟳ Unfinished session detected</div>
-      <div id="resumeInfo" style="font-size:12px;color:var(--muted);"></div>
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0;">
-      <button onclick="resumeSession()" style="font-size:12px;padding:5px 12px;background:none;border:0.5px solid #3a4a2a;border-radius:6px;color:var(--green);cursor:pointer;font-family:var(--font);">Resume</button>
-      <button onclick="discardSession()" style="font-size:12px;padding:5px 12px;background:none;border:0.5px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-family:var(--font);">Discard</button>
-    </div>
-  </div>
+  <input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.html">
 
   <div id="pill" style="display:none" class="file-pill">
     <span id="pillName"></span>
-    <button onclick="clearFile()">✕</button>
+    <button onclick="clearFile()" style="background:none; border:none; color:var(--green); cursor:pointer;">✕</button>
   </div>
 
-  <!-- CONTROLS -->
   <div class="controls">
     <div class="group">
-      <label>Source language</label>
-      <select id="src">
-        <option value="auto">Auto-detect</option>
-        <option value="English">English</option>
-        <option value="Vietnamese">Vietnamese</option>
-        <option value="Chinese">Chinese</option>
-        <option value="Japanese">Japanese</option>
-        <option value="Korean">Korean</option>
-        <option value="French">French</option>
-        <option value="German">German</option>
-        <option value="Spanish">Spanish</option>
-        <option value="Thai">Thai</option>
-      </select>
-    </div>
-    <div class="group">
-      <label>Target language</label>
+      <label>Target Language</label>
       <select id="tgt">
         <option value="Vietnamese">Vietnamese</option>
         <option value="English">English</option>
         <option value="Chinese">Chinese</option>
         <option value="Japanese">Japanese</option>
-        <option value="Korean">Korean</option>
-        <option value="French">French</option>
-        <option value="German">German</option>
-        <option value="Spanish">Spanish</option>
-        <option value="Thai">Thai</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="controls" style="margin-bottom:1rem">
-    <div class="group">
-      <label>Translation style</label>
-      <select id="style">
-        <option value="natural">Natural & fluent</option>
-        <option value="formal">Formal / academic</option>
-        <option value="literal">Literal / close to source</option>
-        <option value="business">Business / professional</option>
-        <option value="simple">Simplified / easy to read</option>
       </select>
     </div>
     <div class="group">
       <label>Model</label>
       <select id="modelSelect">
-        <option value="claude-haiku-4-5-20251001">Haiku 4.5 — fast · $1/$5</option>
-        <option value="claude-sonnet-4-20250514" selected>Sonnet 4 — balanced · $3/$15</option>
-        <option value="claude-sonnet-4-6">Sonnet 4.6 — best · $3/$15</option>
-        <option value="claude-opus-4-6">Opus 4.6 — premium · $5/$25</option>
+        <optgroup label="Anthropic">
+          <option value="claude-sonnet-4-6">Claude 4.6 Sonnet</option>
+          <option value="claude-haiku-4-5-20251001">Claude 4.5 Haiku</option>
+        </optgroup>
+        <optgroup label="Google Gemini">
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+        </optgroup>
       </select>
     </div>
   </div>
-  <div id="modelInfo" style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:1rem;padding:6px 10px;border-left:2px solid var(--border2);">
-    Balanced quality and cost — recommended for most translation tasks
-  </div>
 
   <div class="group">
-    <label>Text to translate</label>
-    <textarea id="inputText" placeholder="Paste text here, or upload a file above..."></textarea>
+    <label>Main Text Content</label>
+    <textarea id="inputText" style="min-height: 120px;" placeholder="File content will appear here..."></textarea>
   </div>
 
   <button class="run-btn" id="runBtn" onclick="runTranslation()">Translate ↗</button>
 
-  <!-- LOG -->
   <div class="log-box">
     <div class="log-head">
       <span class="dot" id="dot"></span>
-      <span id="statusTxt">agent ready</span>
+      <span id="statusTxt">ready</span>
     </div>
     <div class="log-body" id="logBody">
-      <div class="log-line">> awaiting input...</div>
+      <div>> awaiting input...</div>
     </div>
   </div>
 
-  <!-- RESULT -->
   <div class="result-box" id="resultBox" style="display:none">
-    <div class="result-head">
-      <span class="result-lbl">// translation result</span>
-      <button class="copy-btn" id="copyBtn" onclick="copyResult()">Copy</button>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+      <span style="font-size:12px; color:var(--muted); font-family:var(--mono);">// result</span>
+      <button onclick="copyResult()" style="font-size:11px; background:none; border:0.5px solid var(--border); color:var(--accent); cursor:pointer; padding:2px 8px;">Copy</button>
     </div>
     <div class="result-text" id="resultText"></div>
-    <div class="chips" id="chips"></div>
-    <button class="dl-btn" id="dlBtn" onclick="downloadResult()">Download as .txt</button>
   </div>
 
 </div>
 
 <script>
-function updateModelInfo() {
-  const info = {
-    'claude-haiku-4-5-20251001': 'Fastest and cheapest — good for simple, short texts. May miss nuance in complex documents.',
-    'claude-sonnet-4-20250514': 'Balanced quality and cost — recommended for most translation tasks.',
-    'claude-sonnet-4-6': 'Latest Sonnet — best accuracy at the same price as Sonnet 4. Recommended default.',
-    'claude-opus-4-6': 'Highest quality — use for critical documents, legal/academic texts. 1.7× more expensive than Sonnet.'
-  };
-  const m = document.getElementById('modelSelect').value;
-  document.getElementById('modelInfo').textContent = info[m] || '';
-}
-
-document.getElementById('modelSelect').addEventListener('change', updateModelInfo);
-updateModelInfo();
-
 const CHUNK_SIZE = 12000;
-const STORAGE_KEY = 'translation_session';
-let lastResult = '';
-let lastTgt = '';
+const MAX_TEST_SIZE = 200000; // 200KB limit
+const MAX_TOKENS = 4096; // Reduced to half per requirement
 
-// --- Session persistence via localStorage ---
-function saveSession(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-}
-function loadSession() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) { return null; }
-}
-function clearSession() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
-}
-
-function restoreIfAvailable() {
-  const s = loadSession();
-  if (!s || !s.completedChunks || s.completedChunks.length === 0) return;
-  const total = s.totalChunks || '?';
-  const done = s.completedChunks.length;
-  if (done >= total) return; // already finished, don't restore
-
-  // Show resume banner
-  document.getElementById('resumeBanner').style.display = 'flex';
-  document.getElementById('resumeInfo').textContent =
-    `Session found: "${s.fileName}" — ${done}/${total} chunks done (${s.tgt}, ${s.style})`;
-}
-
-function resumeSession() {
-  const s = loadSession();
-  if (!s) return;
-  document.getElementById('inputText').value = s.sourceText || '';
-  document.getElementById('src').value = s.src || 'auto';
-  document.getElementById('tgt').value = s.tgt || 'Vietnamese';
-  document.getElementById('style').value = s.style || 'natural';
-  document.getElementById('modelSelect').value = s.model || 'claude-sonnet-4-20250514';
-  updateModelInfo();
-  if (s.fileName) {
-    document.getElementById('pillName').textContent = s.fileName;
-    document.getElementById('pill').style.display = 'inline-flex';
-  }
-  document.getElementById('resumeBanner').style.display = 'none';
-  log('Session restored — ' + s.completedChunks.length + '/' + s.totalChunks + ' chunks already done', 'ok');
-  log('Re-enter your API key and click "Continue ↗" to resume', 'inf');
-  document.getElementById('runBtn').textContent = 'Continue ↗';
-  document.getElementById('runBtn').dataset.resume = '1';
-}
-
-function discardSession() {
-  clearSession();
-  document.getElementById('resumeBanner').style.display = 'none';
-  log('Previous session discarded');
-}
-
-// --- Utilities ---
-function splitIntoChunks(text, size) {
-  const chunks = [];
-  let start = 0;
-  while (start < text.length) {
-    let end = start + size;
-    if (end < text.length) {
-      const para = text.lastIndexOf('\n\n', end);
-      const newline = text.lastIndexOf('\n', end);
-      const period = text.lastIndexOf('. ', end);
-      end = para > start + size * 0.5 ? para :
-            newline > start + size * 0.5 ? newline :
-            period > start + size * 0.5 ? period + 1 : end;
+// Char counter for Sandbox
+document.getElementById('testInput').addEventListener('input', (e) => {
+    const len = e.target.value.length;
+    document.getElementById('charCount').textContent = `${len.toLocaleString()} / 200,000 chars`;
+    if (len > MAX_TEST_SIZE) {
+        document.getElementById('charCount').style.color = 'var(--red)';
+    } else {
+        document.getElementById('charCount').style.color = 'var(--muted)';
     }
-    chunks.push(text.slice(start, end).trim());
-    start = end;
+});
+
+async function callAI(model, system, text) {
+  const isGemini = model.startsWith('gemini');
+  
+  if (isGemini) {
+    const key = document.getElementById('geminiKey').value.trim();
+    if (!key) throw new Error("Missing Gemini API Key");
+    
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `${system}\n\nText to translate:\n${text}` }] }],
+        generationConfig: { maxOutputTokens: MAX_TOKENS }
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.candidates[0].content.parts[0].text;
+  } else {
+    // Claude Logic
+    const key = document.getElementById('claudeKey').value.trim();
+    if (!key) throw new Error("Missing Claude API Key");
+    
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ 
+          model, 
+          max_tokens: MAX_TOKENS, 
+          system, 
+          messages: [{ role: 'user', content: text }] 
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    return data.content[0].text;
   }
-  return chunks.filter(c => c.length > 0);
 }
 
-async function translateChunk(apiKey, model, system, text) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({ model, max_tokens: 8192, system, messages: [{ role: 'user', content: text }] })
-  });
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error('HTTP ' + res.status + ' — ' + errBody.slice(0, 200));
+async function runTest() {
+    const text = document.getElementById('testInput').value.trim();
+    if (!text) return log('Sandbox: No text to test', 'er');
+    if (text.length > MAX_TEST_SIZE) return log('Sandbox: Text exceeds 200KB limit', 'er');
+    
+    document.getElementById('inputText').value = text;
+    log('Sandbox data moved to main engine...', 'ok');
+    runTranslation();
+}
+
+async function runTranslation() {
+  const text = document.getElementById('inputText').value.trim();
+  if (!text) return log('No text provided', 'er');
+
+  const tgt = document.getElementById('tgt').value;
+  const model = document.getElementById('modelSelect').value;
+  const system = `You are a professional translator. Translate everything to ${tgt}. Output ONLY translated text.`;
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  setDot('busy', 'translating...');
+  
+  try {
+    log(`Starting translation with ${model}...`);
+    const out = await callAI(model, system, text);
+    
+    document.getElementById('resultText').textContent = out;
+    document.getElementById('resultBox').style.display = 'block';
+    log('Translation complete!', 'ok');
+    setDot('ok', 'done');
+  } catch (err) {
+    log('Error: ' + err.message, 'er');
+    setDot('err', 'failed');
   }
-  const data = await res.json();
-  return (data.content || []).map(b => b.text || '').join('');
+  btn.disabled = false;
 }
 
-// --- File handling ---
-const zone = document.getElementById('zone');
-const fi = document.getElementById('fileInput');
-zone.onclick = () => fi.click();
-zone.ondragover = e => { e.preventDefault(); zone.classList.add('drag-over'); };
-zone.ondragleave = () => zone.classList.remove('drag-over');
-zone.ondrop = e => { e.preventDefault(); zone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); };
-fi.onchange = e => { if (e.target.files[0]) loadFile(e.target.files[0]); };
-
-function loadFile(f) {
-  const r = new FileReader();
-  r.onload = e => {
-    const content = e.target.result;
-    document.getElementById('inputText').value = content;
-    document.getElementById('pillName').textContent = f.name;
-    document.getElementById('pill').style.display = 'inline-flex';
-    const kb = (f.size / 1024).toFixed(1);
-    const n = Math.ceil(content.length / CHUNK_SIZE);
-    log('File loaded: ' + f.name + ' (' + kb + ' KB' + (n > 1 ? ', ~' + n + ' chunks' : '') + ')', 'inf');
-    document.getElementById('runBtn').textContent = 'Translate ↗';
-    document.getElementById('runBtn').dataset.resume = '';
-  };
-  r.readAsText(f);
-}
-
-function clearFile() {
-  document.getElementById('pill').style.display = 'none';
-  fi.value = '';
-  log('File cleared');
-}
-
+// UI Helpers
 function log(msg, cls = '') {
   const el = document.getElementById('logBody');
   const d = document.createElement('div');
-  d.className = 'log-line' + (cls ? ' ' + cls : '');
-  const ts = new Date().toLocaleTimeString('en', { hour12: false });
-  d.textContent = '[' + ts + '] ' + msg;
+  d.style.color = cls === 'er' ? 'var(--red)' : (cls === 'ok' ? 'var(--green)' : '#555');
+  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
   el.appendChild(d);
   el.scrollTop = el.scrollHeight;
 }
@@ -481,127 +331,33 @@ function setDot(state, label) {
   document.getElementById('statusTxt').textContent = label;
 }
 
-// --- Main translation ---
-async function runTranslation() {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey || !apiKey.startsWith('sk-ant')) {
-    document.getElementById('apiStatus').className = 'api-status err';
-    document.getElementById('apiStatus').textContent = 'Invalid key';
-    log('API key missing or invalid', 'er'); return;
-  }
-  document.getElementById('apiStatus').className = 'api-status ok';
-  document.getElementById('apiStatus').textContent = 'Key set ✓';
-
-  const text = document.getElementById('inputText').value.trim();
-  if (!text) { log('No text to translate', 'er'); return; }
-
-  const src = document.getElementById('src').value;
-  const tgt = document.getElementById('tgt').value;
-  const style = document.getElementById('style').value;
-  const model = document.getElementById('modelSelect').value;
-  const fileName = document.getElementById('pillName').textContent || 'pasted text';
-  lastTgt = tgt;
-
-  const styleMap = {
-    natural: 'natural and fluent, preserving tone and intent',
-    formal: 'formal and academic, suitable for official or scholarly use',
-    literal: 'literal, staying close to source structure and wording',
-    business: 'professional and business-appropriate',
-    simple: 'simplified, easy to read for a general audience'
-  };
-  const srcNote = src === 'auto' ? 'Detect the source language, then translate it' : `Translate from ${src}`;
-  const system = `You are a professional translation agent. Your sole function is translation.
-${srcNote} to ${tgt}. Style: ${styleMap[style]}.
-Output ONLY the translated text — no preamble, no notes, no explanations.
-Preserve all formatting: paragraphs, line breaks, bullet lists, punctuation style.`;
-
-  const btn = document.getElementById('runBtn');
-  btn.disabled = true;
-  setDot('busy', 'translating...');
-  document.getElementById('resultBox').style.display = 'none';
-
-  const allChunks = splitIntoChunks(text, CHUNK_SIZE);
-  const total = allChunks.length;
-
-  // Check if resuming
-  const existing = loadSession();
-  const isResume = btn.dataset.resume === '1' && existing &&
-    existing.sourceText === text && existing.completedChunks;
-  const completedChunks = isResume ? existing.completedChunks : [];
-  const startFrom = completedChunks.length;
-
-  if (isResume) {
-    log('Resuming from chunk ' + (startFrom + 1) + '/' + total, 'ok');
-  } else {
-    clearSession();
-    log('Agent started — ' + (src === 'auto' ? 'auto-detect' : src) + ' → ' + tgt + ' [' + style + ']', 'inf');
-    log(text.length + ' chars, ' + total + ' chunk' + (total > 1 ? 's' : ''), 'inf');
-    saveSession({ sourceText: text, fileName, src, tgt, style, model, totalChunks: total, completedChunks: [] });
-  }
-
-  try {
-    for (let i = startFrom; i < total; i++) {
-      log('Translating chunk ' + (i + 1) + ' / ' + total + '...', 'inf');
-      btn.textContent = 'Chunk ' + (i + 1) + '/' + total + '...';
-
-      const chunkSystem = total > 1
-        ? system + `\nThis is part ${i + 1} of ${total} of a larger document. Translate this part only.`
-        : system;
-      const out = await translateChunk(apiKey, model, chunkSystem, allChunks[i]);
-      if (!out) throw new Error('Empty response on chunk ' + (i + 1));
-      completedChunks.push(out);
-
-      // Save progress after every chunk
-      saveSession({ sourceText: text, fileName, src, tgt, style, model, totalChunks: total, completedChunks });
-    }
-
-    lastResult = completedChunks.join('\n\n');
-    clearSession(); // done — no need to keep session
-
-    const words = lastResult.split(/\s+/).filter(Boolean).length;
-    const modelLabel = document.getElementById('modelSelect').options[document.getElementById('modelSelect').selectedIndex].text.split(' —')[0];
-    log('All ' + total + ' chunks done — ~' + words + ' words total', 'ok');
-    setDot('ok', 'complete');
-
-    const rt = document.getElementById('resultText');
-    rt.className = 'result-text';
-    rt.textContent = lastResult;
-    document.getElementById('chips').innerHTML =
-      `<span class="chip">${tgt}</span><span class="chip">${style}</span><span class="chip">${modelLabel}</span><span class="chip">${words} words</span>`;
-    document.getElementById('resultBox').style.display = 'block';
-    document.getElementById('dlBtn').style.display = 'inline-block';
-
-  } catch (err) {
-    log('Error: ' + err.message, 'er');
-    log('Progress saved — reload and click "Continue ↗" to resume', 'inf');
-    setDot('err', 'paused');
-    document.getElementById('resultBox').style.display = 'none';
-  }
-
-  btn.disabled = false;
-  btn.textContent = completedChunks.length < total ? 'Continue ↗' : 'Translate ↗';
-  btn.dataset.resume = completedChunks.length < total ? '1' : '';
+function clearFile() {
+  document.getElementById('pill').style.display = 'none';
+  document.getElementById('inputText').value = '';
 }
 
 function copyResult() {
-  if (!lastResult) return;
-  navigator.clipboard.writeText(lastResult).then(() => {
-    const b = document.getElementById('copyBtn');
-    b.textContent = 'Copied!';
-    setTimeout(() => b.textContent = 'Copy', 1800);
-  });
+  navigator.clipboard.writeText(document.getElementById('resultText').textContent);
+  alert('Copied!');
 }
 
-function downloadResult() {
-  if (!lastResult) return;
-  const blob = new Blob([lastResult], { type: 'text/plain;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'translation_' + lastTgt.toLowerCase() + '.txt';
-  a.click();
-}
-
-restoreIfAvailable();
+// File Upload Logic
+const zone = document.getElementById('zone');
+const fi = document.getElementById('fileInput');
+zone.onclick = () => fi.click();
+fi.onchange = e => {
+  const f = e.target.files[0];
+  if (f) {
+    const r = new FileReader();
+    r.onload = ev => {
+      document.getElementById('inputText').value = ev.target.result;
+      document.getElementById('pillName').textContent = f.name;
+      document.getElementById('pill').style.display = 'inline-flex';
+      log(`File loaded: ${f.name}`);
+    };
+    r.readAsText(f);
+  }
+};
 </script>
 </body>
 </html>
