@@ -313,7 +313,7 @@ async function runTranslation() {
      ============================================================
   */
   const srcNote = src === 'auto' ? 'detect the source language' : `translate from ${src}`;
-  const system = `You are a professional translator. Please ${srcNote} to ${tgt}. Output ONLY the translated text that is written in ${srcNote} . Please do not translate anything that is not written in ${srcNote}. Please do not add any preamble or explanation. Absolutely make sure to Maintain the original formatting.`;
+  const system = `You are a professional translator. Please ${src} to ${tgt}. The text could consist parts from many different languages, please do NOT translate anything that is NOT written in ${src}. Please output the same text with the part that is written in ${src} be replaced by the translated version in ${tgt} . Please do not add any preamble or explanation. Absolutely make sure to Maintain the original formatting.`;
 
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
